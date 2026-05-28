@@ -14,7 +14,7 @@ X = df.drop(columns='diabetes')
 y = df['diabetes']
 
 # Preprocessing
-numeric_features = ['age', 'bmi', 'hba1c_level', 'blood_glucose_level']
+numeric_features = ['age', 'bmi', 'HbA1c_level', 'blood_glucose_level']
 categorical_features = ['gender', 'smoking_history']
 binary_features = ['hypertension', 'heart_disease']
 

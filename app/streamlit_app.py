@@ -2,8 +2,49 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-# Load model
-model = joblib.load('models/diabetes_model.pkl')
+# Load model dengan mekanisme fallback otomatis jika terjadi ketidakcocokan versi pickle
+try:
+    model = joblib.load('models/diabetes_model.pkl')
+except Exception as e:
+    import os
+    st.info("🔄 Menyiapkan model untuk pertama kali di lingkungan ini, harap tunggu sekitar 5 detik...")
+    
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import StandardScaler, OneHotEncoder
+    from sklearn.compose import ColumnTransformer
+    
+    # Memuat dataset
+    df = pd.read_csv('data/diabetes_data.csv')
+    
+    # Fitur dan target
+    X = df.drop(columns='diabetes')
+    y = df['diabetes']
+    
+    # Preprocessing
+    numeric_features = ['age', 'bmi', 'HbA1c_level', 'blood_glucose_level']
+    categorical_features = ['gender', 'smoking_history']
+    
+    preprocessor = ColumnTransformer(transformers=[
+        ('num', StandardScaler(), numeric_features),
+        ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)
+    ], remainder='passthrough')
+    
+    # Build pipeline
+    model = Pipeline(steps=[
+        ('preprocessor', preprocessor),
+        ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))
+    ])
+    
+    # Fit model
+    model.fit(X, y)
+    
+    # Pastikan direktori models ada
+    os.makedirs('models', exist_ok=True)
+    
+    # Simpan model agar loading berikutnya instan
+    joblib.dump(model, 'models/diabetes_model.pkl')
+    st.success("✅ Model berhasil disiapkan dan dikonfigurasi!")
 
 # CSS untuk memperindah tampilan
 st.markdown("""
